@@ -1,0 +1,25 @@
+---
+- name: Install and Configure Nginx
+  hosts: my_hosts
+  become: yes  # Using privilege escalation
+  tasks:
+    
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: latest  # Installs the latest version of nginx
+      register: nginx_install  # Register the result of the installation task
+      ignore_errors: yes  # Allow playbook to continue even if this task fails
+
+    - name: Show the result of Nginx installation
+      debug:
+        var: nginx_install  # Display the contents of the registered variable
+
+    - name: Ensure nginx service is started and enabled if installation changed or failed
+      sysvinit:
+        name: nginx
+        state: restarted
+        enabled: yes
+      when: 
+        - nginx_install.changed == true  # The task was changed
+        - nginx_install.failed == false  # The task did not fail
